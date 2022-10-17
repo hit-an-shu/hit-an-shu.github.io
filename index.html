@@ -2,18 +2,92 @@
 <html lang="en">
 <head>
     <title>SLA4</title>
-    
-    <style type="text/css">
+    <style>
+        body {
+            background-color: rgb(192, 241, 225);
+            color: rgb(49, 81, 82);
+            align-items: center;
+            text-align: center;
+        }
+
         #map {
             height: 400px;
-            width: 400px;
+            width: 100%;
         }
     </style>
 
-    <script src=“https://maps.googleapis.com/maps/api/js?key=AIzaSyD-By9E8-Ho1C3a0oPRVzX9RuiM0aivzek&callback=initMap&libraries=&v=weekly” defer></script>
+    <!-- including axios library of js for http request -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 
 </head>
+    <script>
+    function initMap() {
+        var location = {
+            zoom: 8,
+            center: { lat: 21.1232, lng: 79.0515 },
+
+        }
+        var map = new google.maps.Map(document.getElementById("map"), location);
+
+
+        // ● Created a marker and point it to VNIT.
+        // ● Changed the icon of the marker.
+        // ● Added a caption(message) to the marker, so that if user clicks on the marker
+        // caption(message) is displayed
+        addmarkers({
+            coords: { lat: 21.1232, lng: 79.0515 },
+            iconImage: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+            content: '<h2>VNIT</h2>'
+        });
+
+        //Get request to get all the markers from the database
+        axios.get("/getMarkers").then((res) => {
+            let locations = res.data;
+            locations.forEach(element => {
+                const pos = { lat: element.lat, lng: element.lng };
+                addmarkers({ coords: pos });
+            });
+        }).catch((err) => {
+            console.log(err);
+        });
+
+        // ● Dynamically add markers to Google map on a user click.
+        google.maps.event.addListener(map, 'click',
+            function (event) {
+                addmarkers({ coords: event.latLng });
+                const loc = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+
+                //Post request to add the newly clicked marker into the database
+                axios.post("/addMarker", loc).error((err) => {
+                    console.log(err);
+                });
+            });
+
+        // Add marker function
+        function addmarkers(props) {
+            var marker = new google.maps.Marker({
+                position: props.coords,
+                map: map,
+            });
+
+            if (props.iconImage) {
+                marker.setIcon(props.iconImage);
+            }
+
+            if (props.content) {
+                var caption = new google.maps.InfoWindow({
+                    content: props.content
+                });
+
+                marker.addListener('click', function () {
+                    caption.open(map, marker);
+                });
+            }
+        }
+    }
+</script>
+
 <body>
     <p>Hello All! <br>
     This is a website with dynamically embedded charts and also has the google maps api</p>
@@ -24,33 +98,9 @@
     </div>
     
     
-    <script>
-  
-        // Initialize and add the map
-        function initMap() {
-  
-            // The location of Geeksforgeeks office
-            const vnit = {
-                lat: 21.1232,
-                lng: 79.0515
-            };
-  
-            // Create the map, centered at gfg_office
-            const map = new google.maps.Map(
-                    document.getElementById("map"), {
-  
-                // Set the zoom of the map
-                zoom: 4,
-                center: vnit,
-            });
-            
-            const marker = new google.maps.Marker({
-                position: vnit,
-                map: map,
-            });
-        }
-        initMap();
-    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyApx6pFCY0XlU4mSWReK9AOs8BdMhLoLco&callback=initMap">
+        </script>
     
     
 </body>
